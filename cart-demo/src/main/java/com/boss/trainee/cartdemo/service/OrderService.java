@@ -38,10 +38,11 @@ public class OrderService {
      * 首先将信息插入订单列表中，然后获取生成的订单id在订单详情表中插入数据，
      * 最后删除购物车中成功下单的数据。
      *
-     * @param userId
-     * @param addressId
-     * @param state
-     * @param goodsMsg
+     * @param userId    用户id
+     * @param addressId 地址id
+     * @param state     订单状态
+     * @param goodsMsg  选中商品的id和数量
+     * @return
      */
     @Transactional(rollbackFor = Exception.class)
     public void insert(Long userId, Long addressId, Integer state,
@@ -68,6 +69,12 @@ public class OrderService {
 
     }
 
+    /**
+     * 根据商品id和数量返回Map类型数据
+     *
+     * @param goodsMsg 商品id和对应数量
+     * @return HashMap 商品id和对应商品
+     */
     private HashMap<Long, Goods> getMsg(HashMap<Long, Integer> goodsMsg) {
         HashMap<Long, Goods> orderMsg = new HashMap<>();
 

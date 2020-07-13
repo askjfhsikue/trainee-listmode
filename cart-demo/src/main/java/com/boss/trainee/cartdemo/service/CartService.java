@@ -6,6 +6,7 @@ import com.boss.trainee.cartdemo.entity.Cart;
 import com.boss.trainee.cartdemo.entity.Goods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
@@ -32,8 +33,8 @@ public class CartService {
     /**
      * 检验参数是否合法
      *
-     * @param cart
-     * @return
+     * @param cart 购物车对象
+     * @return boolean
      */
     private boolean checkout(Cart cart) {
         Long userId = cart.getUserId();
@@ -48,8 +49,8 @@ public class CartService {
     /**
      * 通过用户id和商品id获取单条购物车信息并返回
      *
-     * @param cart
-     * @return
+     * @param cart 购物车对象
+     * @return cart 购物车对象
      */
     private Cart getOne(Cart cart) {
         Example example = new Example(Cart.class);
@@ -57,17 +58,17 @@ public class CartService {
                 .andEqualTo("userId", cart.getUserId())
                 .andEqualTo("goodsId", cart.getGoodsId());
 
-
         return cartDao.selectOneByExample(example);
     }
 
     /**
      * 更新购物车公共方法
      *
-     * @param cart
-     * @return
+     * @param cart 购物车对象
+     * @return Boolean
      */
     private Boolean updateCart(Cart cart) {
+
         checkout(cart);
         Example example = new Example(Cart.class);
         example.createCriteria()
@@ -77,19 +78,16 @@ public class CartService {
         cart1.setNumber(cart.getNumber());
         cartDao.updateByExampleSelective(cart1, example);
 
-        Goods goods = myCartGoods.get(cart.getGoodsId());
-        goods.setNumber(cart1.getNumber());
         return true;
     }
 
-
     /**
-     * 通过用户id在数据库中获取用户购物车中的商品信息并返回
+     * 返回购物车信息
      *
-     * @param userId
-     * @return
+     * @param userId 用户id
+     * @return list 商品列表
      */
-    public List<Goods> getCart(Long userId) {
+    private List<Goods> setMyCartGoods(Long userId) {
         List<Goods> myCart = new ArrayList<>();
         if (userId == null) {
             return myCart;
@@ -102,8 +100,26 @@ public class CartService {
         return myCart;
     }
 
+    /**
+     * 通过用户id在数据库中获取用户购物车中的商品信息并返回
+     *
+     * @param userId 用户id
+     * @return list 商品列表
+     */
+    public List<Goods> getCart(Long userId) {
 
+        return setMyCartGoods(userId);
+    }
+
+
+    /**
+     * 获取选择的商品总价
+     *
+     * @param ids 商品id
+     * @return BigDecimal 总价
+     */
     public BigDecimal getPrice(List<Long> ids) {
+        setMyCartGoods(234L);
         BigDecimal totalPrice = new BigDecimal(0);
         for (Long id :
                 ids) {
@@ -118,28 +134,25 @@ public class CartService {
     /**
      * 向购物车中添加商品
      * 若原购物车中不存在该商品id，则直接将该商品添加进购物车中
-     * 否则让原购物车中商品数量和参数中的商品数量进行叠加。
+     * 否则让原购物车中商品数量被参数中的商品数量覆盖。
      *
-     * @param cart
-     * @return
+     * @param cart 购物车对象
+     * @return cart 购物车对象
      */
+    @Transactional(rollbackFor = Exception.class)
     public Boolean insert(Cart cart) {
         checkout(cart);
         Cart temp = getOne(cart);
         if (temp == null) {
             cartDao.insert(cart);
-
             Goods goods = goodsDao.selectByPrimaryKey(cart.getGoodsId());
             goods.setNumber(cart.getNumber());
-            myCartGoods.put(cart.getGoodsId(), goods);
+
             return true;
         }
-        Integer number = temp.getNumber() + cart.getNumber();
+        Integer number = cart.getNumber();
         cart.setNumber(number);
         updateCart(cart);
-
-        Goods goods = myCartGoods.get(cart.getGoodsId());
-        goods.setNumber(cart.getNumber());
 
         return true;
 
@@ -148,8 +161,9 @@ public class CartService {
     /**
      * 删除购物车中商品
      *
-     * @param userId
-     * @param goodsId
+     * @param userId  用户id
+     * @param goodsId 商品id
+     * @return Boolean
      */
     public Boolean remove(Long userId, Long goodsId) {
         if (userId == null || goodsId == null) {
@@ -158,14 +172,10 @@ public class CartService {
         Cart cart = new Cart();
         cart.setGoodsId(goodsId);
         cart.setUserId(userId);
-
         if (getOne(cart) != null) {
             cartDao.delete(cart);
-            myCartGoods.remove(cart.getGoodsId());
-
             return true;
         } else {
-
             throw new IllegalArgumentException("未在购物车中找到该商品");
         }
 
@@ -175,8 +185,8 @@ public class CartService {
     /**
      * 更新购物车中选购商品数量
      *
-     * @param cart
-     * @return
+     * @param cart 购物车对象
+     * @return Boolean
      */
     public Boolean update(Cart cart) {
 

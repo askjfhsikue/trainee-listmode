@@ -16,16 +16,25 @@ import javax.persistence.Table;
 @Data
 @Table(name = "cart")
 public class Cart {
+    /**
+     * 购物车id
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
-
+    /**
+     * 用户id
+     */
     @Column
     private Long userId;
-
+    /**
+     * 商品id
+     */
     @Column
     private Long goodsId;
-
+    /**
+     * 购买数量
+     */
     @Column
     private Integer number;
 

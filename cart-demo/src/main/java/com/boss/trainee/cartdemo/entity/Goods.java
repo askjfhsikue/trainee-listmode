@@ -18,17 +18,25 @@ import java.math.BigDecimal;
 @Data
 @Table(name = "goods")
 public class Goods {
-
+    /**
+     * 商品id
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long goodsId;
-
+    /**
+     * 商品名
+     */
     @Column
     private String goodsName;
-
+    /**
+     * 商品单价
+     */
     @Column
     private BigDecimal price;
-
+    /**
+     * 购买数量
+     */
     @Transient
     private Integer number;
 
