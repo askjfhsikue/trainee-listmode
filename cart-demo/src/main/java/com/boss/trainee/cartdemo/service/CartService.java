@@ -65,11 +65,13 @@ public class CartService {
      * 更新购物车公共方法
      *
      * @param cart 购物车对象
-     * @return Boolean
+     * @return boolean
      */
-    private Boolean updateCart(Cart cart) {
-
+    private boolean updateCart(Cart cart) {
         checkout(cart);
+        if (getOne(cart) == null) {
+            return false;
+        }
         Example example = new Example(Cart.class);
         example.createCriteria()
                 .andEqualTo("userId", cart.getUserId())
@@ -121,6 +123,10 @@ public class CartService {
     public BigDecimal getPrice(List<Long> ids) {
         setMyCartGoods(234L);
         BigDecimal totalPrice = new BigDecimal(0);
+        //判断购物车中是否存在商品
+        if (myCartGoods == null) {
+            return totalPrice;
+        }
         for (Long id :
                 ids) {
             Goods goods = myCartGoods.get(id);
@@ -143,11 +149,11 @@ public class CartService {
     public Boolean insert(Cart cart) {
         checkout(cart);
         Cart temp = getOne(cart);
+        //若购物车中不存在该商品
         if (temp == null) {
             cartDao.insert(cart);
             Goods goods = goodsDao.selectByPrimaryKey(cart.getGoodsId());
             goods.setNumber(cart.getNumber());
-
             return true;
         }
         Integer number = cart.getNumber();
@@ -163,9 +169,9 @@ public class CartService {
      *
      * @param userId  用户id
      * @param goodsId 商品id
-     * @return Boolean
+     * @return boolean
      */
-    public Boolean remove(Long userId, Long goodsId) {
+    public boolean remove(Long userId, Long goodsId) {
         if (userId == null || goodsId == null) {
             throw new IllegalArgumentException("参数为空");
         }
@@ -186,9 +192,9 @@ public class CartService {
      * 更新购物车中选购商品数量
      *
      * @param cart 购物车对象
-     * @return Boolean
+     * @return boolean
      */
-    public Boolean update(Cart cart) {
+    public boolean update(Cart cart) {
 
         return updateCart(cart);
     }
