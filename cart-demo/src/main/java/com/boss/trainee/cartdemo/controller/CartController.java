@@ -38,13 +38,12 @@ public class CartController {
     @PostMapping("/add")
     @ResponseBody
     public Object addGoods(@RequestBody Cart cart) {
-
         return cartService.insert(cart);
     }
 
     @GetMapping("/remove")
     @ResponseBody
-    public Object remove(Long userId, Long goodsId) throws Exception {
+    public Object remove(Long userId, Long goodsId) {
         return cartService.remove(userId, goodsId);
     }
 

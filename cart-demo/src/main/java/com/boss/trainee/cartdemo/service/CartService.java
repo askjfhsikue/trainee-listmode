@@ -27,8 +27,6 @@ public class CartService {
     @Autowired
     private GoodsDao goodsDao;
 
-    private HashMap<Long, Goods> myCartGoods = new HashMap<>();
-
 
     /**
      * 检验参数是否合法
@@ -95,10 +93,7 @@ public class CartService {
             return myCart;
         }
         myCart = cartDao.getCartGoodsByUserId(userId);
-        for (Goods goods :
-                myCart) {
-            myCartGoods.put(goods.getGoodsId(), goods);
-        }
+
         return myCart;
     }
 
@@ -109,7 +104,6 @@ public class CartService {
      * @return list 商品列表
      */
     public List<Goods> getCart(Long userId) {
-
         return setMyCartGoods(userId);
     }
 
@@ -121,7 +115,12 @@ public class CartService {
      * @return BigDecimal 总价
      */
     public BigDecimal getPrice(List<Long> ids) {
-        setMyCartGoods(234L);
+        List<Goods> myCart = setMyCartGoods(234L);
+        HashMap<Long, Goods> myCartGoods = new HashMap<>();
+        for (Goods goods :
+                myCart) {
+            myCartGoods.put(goods.getGoodsId(), goods);
+        }
         BigDecimal totalPrice = new BigDecimal(0);
         //判断购物车中是否存在商品
         if (myCartGoods == null) {
@@ -176,6 +175,10 @@ public class CartService {
             throw new IllegalArgumentException("参数为空");
         }
         Cart cart = new Cart();
+        cart.setCartId(-1L);
+        cart.setUserId(-1L);
+        cart.setGoodsId(-1L);
+        cart.setNumber(-1);
         cart.setGoodsId(goodsId);
         cart.setUserId(userId);
         if (getOne(cart) != null) {
@@ -184,7 +187,6 @@ public class CartService {
         } else {
             throw new IllegalArgumentException("未在购物车中找到该商品");
         }
-
 
     }
 
@@ -195,7 +197,6 @@ public class CartService {
      * @return boolean
      */
     public boolean update(Cart cart) {
-
         return updateCart(cart);
     }
 
